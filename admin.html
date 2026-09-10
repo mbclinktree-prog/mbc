@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MBC · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f0a05; --panel:#1a1712; --panel-2:#221d16; --line:#332c22;
+    --orange:#EC7E1A; --ink:#f4efe9; --muted:#a89d8e; --danger:#e5533d;
+    --ok:#4caf7d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'DM Sans',system-ui,-apple-system,sans-serif;
+    background:var(--bg); color:var(--ink);
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--orange)}
+  button{font-family:inherit;cursor:pointer}
+  input,select{
+    font-family:inherit;font-size:14px;
+    background:var(--panel-2);color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;
+    padding:9px 11px;width:100%;
+  }
+  input:focus,select:focus{outline:2px solid var(--orange);outline-offset:0}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:500}
+  .btn{
+    background:var(--orange);color:#1a1006;border:0;border-radius:9px;
+    padding:10px 16px;font-weight:600;font-size:14px;
+  }
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn.sm{padding:6px 10px;font-size:12.5px}
+  .btn.danger{background:transparent;color:var(--danger);border:1px solid var(--line)}
+  .btn:disabled{opacity:.5;cursor:default}
+
+  /* Login */
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .login{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px}
+  .login h1{font-size:18px;margin-bottom:4px}
+  .login p{font-size:13px;color:var(--muted);margin-bottom:20px}
+  .login .field{margin-bottom:14px}
+  .msg{font-size:13px;margin-top:12px}
+  .msg.err{color:var(--danger)}
+  .msg.ok{color:var(--ok)}
+
+  /* App shell */
+  .shell{max-width:820px;margin:0 auto;padding:20px 16px 120px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+  .topbar h1{font-size:17px;font-weight:700}
+  .topbar .sp{flex:1}
+  .tabs{display:flex;gap:6px;margin-bottom:22px;border-bottom:1px solid var(--line)}
+  .tab{
+    background:none;border:0;color:var(--muted);font-size:14px;font-weight:600;
+    padding:10px 14px;border-bottom:2px solid transparent;margin-bottom:-1px;
+  }
+  .tab.active{color:var(--ink);border-bottom-color:var(--orange)}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .card h2{font-size:14px;margin-bottom:14px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
+  .row{display:flex;gap:10px;margin-bottom:12px}
+  .row > div{flex:1}
+  .avatar-edit{display:flex;gap:14px;align-items:center}
+  .avatar-edit img{width:72px;height:72px;border-radius:50%;object-fit:cover;background:var(--orange);flex:none}
+
+  .item{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:10px}
+  .item .grip{display:flex;gap:6px;align-items:center;margin-bottom:10px}
+  .item .grip .ord{display:flex;gap:4px}
+  .item .grip .ttl{font-size:12px;color:var(--muted);flex:1}
+  .item .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .item .fields .full{grid-column:1 / -1}
+  .chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink)}
+  .chk input{width:auto}
+  .mini-upload{display:flex;gap:8px;align-items:center}
+  .mini-upload input[type=file]{font-size:11px}
+
+  .savebar{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:linear-gradient(180deg,transparent,var(--bg) 30%);
+    padding:16px;display:flex;justify-content:center;
+  }
+  .savebar .inner{max-width:820px;width:100%;display:flex;align-items:center;gap:14px;justify-content:flex-end}
+
+  /* Métricas */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .n{font-size:24px;font-weight:700}
+  .stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+  .chart{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .chart svg{width:100%;height:160px;display:block}
+  .bar{fill:var(--orange)}
+  .axis{fill:var(--muted);font-size:9px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+
+  .hidden{display:none !important}
+  .notice{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:520px;margin:60px auto;font-size:14px;line-height:1.6}
+  .notice code{background:var(--panel-2);padding:2px 6px;border-radius:5px;font-size:12.5px}
+  @media (max-width:560px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .item .fields{grid-template-columns:1fr}
+    .row{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+
+  <!-- Sin configurar -->
+  <div id="notConfigured" class="notice hidden">
+    <strong>Falta configurar Supabase.</strong><br><br>
+    Editá <code>config.js</code> con la URL y la anon key de tu proyecto
+    (Supabase → Settings → API) y volvé a cargar esta página.
+    Los pasos completos están en <code>README.md</code>.
+  </div>
+
+  <!-- Login -->
+  <div id="loginView" class="login-wrap hidden">
+    <form class="login" id="loginForm">
+      <h1>MBC · Admin</h1>
+      <p>Ingresá con tu usuario y contraseña.</p>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn" style="width:100%" type="submit" id="loginBtn">Entrar</button>
+      <div class="msg err" id="loginMsg"></div>
+    </form>
+  </div>
+
+  <!-- App -->
+  <div id="appView" class="shell hidden">
+    <div class="topbar">
+      <h1>MBC · Admin</h1>
+      <div class="sp"></div>
+      <a class="btn ghost sm" href="index.html" target="_blank" rel="noopener">Ver página ↗</a>
+      <button class="btn ghost sm" id="logoutBtn">Salir</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="content">Contenido</button>
+      <button class="tab" data-tab="metrics">Métricas</button>
+    </div>
+
+    <!-- CONTENIDO -->
+    <section id="tab-content">
+      <div class="card">
+        <h2>Perfil</h2>
+        <div class="row"><div>
+          <label for="pName">Nombre</label>
+          <input id="pName" type="text">
+        </div></div>
+        <label>Foto de perfil</label>
+        <div class="avatar-edit">
+          <img id="pAvatarPreview" src="assets/avatar.jpg" alt="">
+          <div style="flex:1">
+            <div class="mini-upload" style="margin-bottom:8px">
+              <input type="file" id="pAvatarFile" accept="image/*">
+            </div>
+            <input id="pAvatarUrl" type="text" placeholder="…o pegá una URL de imagen">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Redes</h2>
+        <div id="socialsList"></div>
+        <button class="btn ghost sm" id="addSocial">+ Agregar red</button>
+      </div>
+
+      <div class="card">
+        <h2>Botones</h2>
+        <div id="linksList"></div>
+        <button class="btn ghost sm" id="addLink">+ Agregar botón</button>
+      </div>
+    </section>
+
+    <!-- MÉTRICAS -->
+    <section id="tab-metrics" class="hidden">
+      <div class="row" style="align-items:flex-end;max-width:320px">
+        <div>
+          <label for="range">Rango</label>
+          <select id="range">
+            <option value="7">Últimos 7 días</option>
+            <option value="30" selected>Últimos 30 días</option>
+            <option value="90">Últimos 90 días</option>
+            <option value="0">Todo</option>
+          </select>
+        </div>
+        <div style="flex:none">
+          <button class="btn ghost sm" id="refreshMetrics">Actualizar</button>
+        </div>
+      </div>
+
+      <div class="stats" style="margin-top:16px">
+        <div class="stat"><div class="n" id="mViews">–</div><div class="k">Visitas (rango)</div></div>
+        <div class="stat"><div class="n" id="mViewsAll">–</div><div class="k">Visitas totales</div></div>
+        <div class="stat"><div class="n" id="mClicks">–</div><div class="k">Clicks (rango)</div></div>
+        <div class="stat"><div class="n" id="mCtr">–</div><div class="k">Clicks / visita</div></div>
+      </div>
+
+      <div class="chart">
+        <label style="margin-bottom:10px">Visitas por día</label>
+        <svg id="chart" viewBox="0 0 600 160" preserveAspectRatio="none"></svg>
+      </div>
+
+      <div class="card">
+        <h2>Clicks por botón</h2>
+        <table>
+          <thead><tr><th>Botón</th><th class="num">Clicks</th><th class="num">%</th></tr></thead>
+          <tbody id="clicksTable"><tr><td colspan="3" style="color:var(--muted)">Sin datos todavía.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="msg" id="metricsMsg" style="color:var(--muted)"></div>
+    </section>
+  </div>
+
+  <div class="savebar hidden" id="saveBar">
+    <div class="inner">
+      <span class="msg" id="saveMsg"></span>
+      <button class="btn" id="saveBtn">Guardar cambios</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="defaults.js"></script>
+  <script src="mbc.js"></script>
+  <script>
+    var sb = MBC.sb;
+    var cfg = MBC.normalize(null);
+
+    var $ = function(id){ return document.getElementById(id); };
+    function show(el){ el.classList.remove("hidden"); }
+    function hide(el){ el.classList.add("hidden"); }
+    function esc(s){
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+        return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+      });
+    }
+    function slug(s){
+      return (s || "btn").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")
+        .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,32) || "btn";
+    }
+
+    // ── Arranque ──────────────────────────────────────────────
+    if(!MBC.configured || !sb){
+      show($("notConfigured"));
+    } else {
+      sb.auth.getSession().then(function(res){
+        if(res.data.session) enterApp();
+        else show($("loginView"));
+      });
+      sb.auth.onAuthStateChange(function(_evt, session){
+        if(session) enterApp();
+        else { hide($("appView")); hide($("saveBar")); show($("loginView")); }
+      });
+    }
+
+    // ── Login ─────────────────────────────────────────────────
+    $("loginForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      $("loginMsg").textContent = "";
+      $("loginBtn").disabled = true;
+      sb.auth.signInWithPassword({
+        email: $("email").value.trim(),
+        password: $("password").value
+      }).then(function(res){
+        $("loginBtn").disabled = false;
+        if(res.error){ $("loginMsg").textContent = "No se pudo entrar: " + res.error.message; }
+      });
+    });
+    $("logoutBtn").addEventListener("click", function(){ sb.auth.signOut(); });
+
+    function enterApp(){
+      hide($("loginView")); hide($("notConfigured"));
+      show($("appView")); show($("saveBar"));
+      loadIntoForm();
+    }
+
+    // ── Tabs ─────────────────────────────────────────────────
+    document.querySelectorAll(".tab").forEach(function(t){
+      t.addEventListener("click", function(){
+        document.querySelectorAll(".tab").forEach(function(x){ x.classList.remove("active"); });
+        t.classList.add("active");
+        var name = t.dataset.tab;
+        $("tab-content").classList.toggle("hidden", name !== "content");
+        $("tab-metrics").classList.toggle("hidden", name !== "metrics");
+        $("saveBar").classList.toggle("hidden", name !== "content");
+        if(name === "metrics") loadMetrics();
+      });
+    });
+
+    // ── Cargar config en el formulario ───────────────────────
+    function loadIntoForm(){
+      sb.from("site_config").select("profile, socials, links").eq("id","main").maybeSingle()
+        .then(function(res){
+          cfg = MBC.normalize(res.data);
+          $("pName").value = cfg.profile.name || "";
+          $("pAvatarUrl").value = cfg.profile.avatar_url || "";
+          $("pAvatarPreview").src = cfg.profile.avatar_url || "assets/avatar.jpg";
+          renderSocials();
+          renderLinks();
+        });
+    }
+
+    $("pName").addEventListener("input", function(){ cfg.profile.name = this.value; });
+    $("pAvatarUrl").addEventListener("input", function(){
+      cfg.profile.avatar_url = this.value;
+      $("pAvatarPreview").src = this.value || "assets/avatar.jpg";
+    });
+    $("pAvatarFile").addEventListener("change", function(){
+      if(this.files[0]) uploadImage(this.files[0], function(url){
+        cfg.profile.avatar_url = url;
+        $("pAvatarUrl").value = url;
+        $("pAvatarPreview").src = url;
+      });
+    });
+
+    // ── Redes ────────────────────────────────────────────────
+    var SOCIAL_TYPES = ["instagram","web","facebook","tiktok","whatsapp","x","youtube"];
+    function renderSocials(){
+      var box = $("socialsList"); box.innerHTML = "";
+      cfg.socials.forEach(function(s, i){
+        var el = document.createElement("div");
+        el.className = "item";
+        el.innerHTML =
+          '<div class="fields">' +
+            '<div><label>Tipo</label><select data-k="type">' +
+              SOCIAL_TYPES.map(function(t){
+                return '<option value="'+t+'"'+(s.type===t?" selected":"")+'>'+t+'</option>';
+              }).join("") +
+            '</select></div>' +
+            '<div><label>URL</label><input data-k="url" type="text" value="'+esc(s.url)+'"></div>' +
+            '<div class="full"><button class="btn danger sm" data-act="del">Borrar</button></div>' +
+          '</div>';
+        el.querySelector('[data-k="type"]').addEventListener("change", function(){ cfg.socials[i].type = this.value; });
+        el.querySelector('[data-k="url"]').addEventListener("input", function(){ cfg.socials[i].url = this.value; });
+        el.querySelector('[data-act="del"]').addEventListener("click", function(){
+          cfg.socials.splice(i,1); renderSocials();
+        });
+        box.appendChild(el);
+      });
+    }
+    $("addSocial").addEventListener("click", function(){
+      cfg.socials.push({ type:"instagram", url:"" }); renderSocials();
+    });
+
+    // ── Botones ──────────────────────────────────────────────
+    function renderLinks(){
+      var box = $("linksList"); box.innerHTML = "";
+      cfg.links.forEach(function(l, i){
+        var el = document.createElement("div");
+        el.className = "item";
+        el.innerHTML =
+          '<div class="grip">' +
+            '<div class="ord">' +
+              '<button class="btn ghost sm" data-act="up" '+(i===0?"disabled":"")+'>↑</button>' +
+              '<button class="btn ghost sm" data-act="down" '+(i===cfg.links.length-1?"disabled":"")+'>↓</button>' +
+            '</div>' +
+            '<span class="ttl">Botón '+(i+1)+'</span>' +
+            '<label class="chk"><input type="checkbox" data-k="enabled" '+(l.enabled!==false?"checked":"")+'> visible</label>' +
+          '</div>' +
+          '<div class="fields">' +
+            '<div class="full"><label>Texto</label><input data-k="label" type="text" value="'+esc(l.label)+'"></div>' +
+            '<div class="full"><label>URL</label><input data-k="url" type="text" value="'+esc(l.url)+'"></div>' +
+            '<div><label>Tipo</label><select data-k="kind">' +
+              '<option value="link"'+(l.kind!=="pdf"?" selected":"")+'>Link normal (abre en pestaña)</option>' +
+              '<option value="pdf"'+(l.kind==="pdf"?" selected":"")+'>PDF en modal</option>' +
+            '</select></div>' +
+            '<div><label>Subtítulo (opcional)</label><input data-k="sublabel" type="text" value="'+esc(l.sublabel||"")+'"></div>' +
+            '<div class="full"><label>Miniatura (opcional)</label>' +
+              '<div class="mini-upload"><input type="file" accept="image/*" data-act="thumbfile">' +
+              '<input data-k="thumb_url" type="text" placeholder="URL de la miniatura" value="'+esc(l.thumb_url||"")+'"></div>' +
+            '</div>' +
+            '<div class="full"><button class="btn danger sm" data-act="del">Borrar botón</button></div>' +
+          '</div>';
+
+        el.querySelector('[data-k="label"]').addEventListener("input", function(){ cfg.links[i].label = this.value; });
+        el.querySelector('[data-k="url"]').addEventListener("input", function(){ cfg.links[i].url = this.value; });
+        el.querySelector('[data-k="kind"]').addEventListener("change", function(){ cfg.links[i].kind = this.value; });
+        el.querySelector('[data-k="sublabel"]').addEventListener("input", function(){ cfg.links[i].sublabel = this.value; });
+        el.querySelector('[data-k="thumb_url"]').addEventListener("input", function(){ cfg.links[i].thumb_url = this.value; });
+        el.querySelector('[data-k="enabled"]').addEventListener("change", function(){ cfg.links[i].enabled = this.checked; });
+        el.querySelector('[data-act="thumbfile"]').addEventListener("change", function(){
+          if(this.files[0]) uploadImage(this.files[0], function(url){
+            cfg.links[i].thumb_url = url; renderLinks();
+          });
+        });
+        el.querySelector('[data-act="del"]').addEventListener("click", function(){
+          cfg.links.splice(i,1); renderLinks();
+        });
+        el.querySelector('[data-act="up"]').addEventListener("click", function(){
+          if(i>0){ var t=cfg.links[i-1]; cfg.links[i-1]=cfg.links[i]; cfg.links[i]=t; renderLinks(); }
+        });
+        el.querySelector('[data-act="down"]').addEventListener("click", function(){
+          if(i<cfg.links.length-1){ var t=cfg.links[i+1]; cfg.links[i+1]=cfg.links[i]; cfg.links[i]=t; renderLinks(); }
+        });
+        box.appendChild(el);
+      });
+    }
+    $("addLink").addEventListener("click", function(){
+      cfg.links.push({ id:"btn-"+Date.now(), label:"Nuevo botón", url:"", kind:"link", thumb_url:"", sublabel:"", enabled:true });
+      renderLinks();
+    });
+
+    // ── Subida de imágenes a Storage ─────────────────────────
+    function uploadImage(file, cb){
+      $("saveMsg").textContent = "Subiendo imagen…";
+      $("saveMsg").className = "msg";
+      var path = "uploads/" + Date.now() + "-" + slug(file.name.replace(/\.[^.]+$/,"")) + "." +
+                 (file.name.split(".").pop() || "png").toLowerCase();
+      sb.storage.from("assets").upload(path, file, { upsert:true, cacheControl:"3600" })
+        .then(function(res){
+          if(res.error){ $("saveMsg").textContent = "Error al subir: " + res.error.message; $("saveMsg").className="msg err"; return; }
+          var pub = sb.storage.from("assets").getPublicUrl(path).data.publicUrl;
+          $("saveMsg").textContent = "Imagen lista (acordate de Guardar).";
+          $("saveMsg").className = "msg ok";
+          cb(pub);
+        });
+    }
+
+    // ── Guardar ──────────────────────────────────────────────
+    $("saveBtn").addEventListener("click", function(){
+      // ids estables para métricas: derivá de label si falta
+      cfg.links.forEach(function(l){ if(!l.id) l.id = slug(l.label) + "-" + Math.random().toString(36).slice(2,6); });
+      $("saveBtn").disabled = true;
+      $("saveMsg").textContent = "Guardando…";
+      $("saveMsg").className = "msg";
+      sb.from("site_config").upsert({
+        id: "main",
+        profile: cfg.profile,
+        socials: cfg.socials,
+        links: cfg.links,
+        updated_at: new Date().toISOString()
+      }).then(function(res){
+        $("saveBtn").disabled = false;
+        if(res.error){
+          $("saveMsg").textContent = "Error: " + res.error.message;
+          $("saveMsg").className = "msg err";
+        } else {
+          $("saveMsg").textContent = "Guardado ✓";
+          $("saveMsg").className = "msg ok";
+          setTimeout(function(){ $("saveMsg").textContent = ""; }, 3000);
+        }
+      });
+    });
+
+    // ── Métricas ─────────────────────────────────────────────
+    $("refreshMetrics").addEventListener("click", loadMetrics);
+    $("range").addEventListener("change", loadMetrics);
+
+    function loadMetrics(){
+      var days = parseInt($("range").value, 10);
+      $("metricsMsg").textContent = "Cargando…";
+
+      var qAll = sb.from("events").select("id", { count:"exact", head:true }).eq("type","view");
+      var q = sb.from("events").select("type, link_id, link_label, created_at").limit(50000);
+      if(days > 0){
+        var since = new Date(Date.now() - days*864e5).toISOString();
+        q = q.gte("created_at", since);
+      }
+
+      Promise.all([q, qAll]).then(function(r){
+        var res = r[0], allViews = r[1];
+        if(res.error){ $("metricsMsg").textContent = "Error: " + res.error.message; return; }
+        $("metricsMsg").textContent = "";
+        var rows = res.data || [];
+        var views = rows.filter(function(e){ return e.type === "view"; });
+        var clicks = rows.filter(function(e){ return e.type === "click"; });
+
+        $("mViews").textContent = views.length;
+        $("mViewsAll").textContent = (allViews && typeof allViews.count === "number") ? allViews.count : "–";
+        $("mClicks").textContent = clicks.length;
+        $("mCtr").textContent = views.length ? (clicks.length / views.length).toFixed(2) : "–";
+
+        drawChart(views, days);
+
+        var byLink = {};
+        clicks.forEach(function(e){
+          var key = e.link_label || e.link_id || "(sin nombre)";
+          byLink[key] = (byLink[key] || 0) + 1;
+        });
+        var arr = Object.keys(byLink).map(function(k){ return [k, byLink[k]]; })
+          .sort(function(a,b){ return b[1] - a[1]; });
+        var tb = $("clicksTable");
+        if(!arr.length){
+          tb.innerHTML = '<tr><td colspan="3" style="color:var(--muted)">Sin clicks en el rango.</td></tr>';
+        } else {
+          tb.innerHTML = arr.map(function(x){
+            var pct = clicks.length ? Math.round(x[1]/clicks.length*100) : 0;
+            return "<tr><td>"+esc(x[0])+'</td><td class="num">'+x[1]+'</td><td class="num">'+pct+"%</td></tr>";
+          }).join("");
+        }
+      });
+    }
+
+    function drawChart(views, days){
+      var svg = $("chart");
+      var W = 600, H = 160, pad = 18;
+      var n = days > 0 ? days : 30;
+      var today = new Date(); today.setHours(0,0,0,0);
+      var buckets = [];
+      for(var i = n - 1; i >= 0; i--){
+        var d = new Date(today.getTime() - i*864e5);
+        buckets.push({ key: d.toISOString().slice(0,10), label: (d.getMonth()+1)+"/"+d.getDate(), v: 0 });
+      }
+      var idx = {};
+      buckets.forEach(function(b, k){ idx[b.key] = k; });
+      views.forEach(function(e){
+        var k = idx[(e.created_at || "").slice(0,10)];
+        if(k != null) buckets[k].v++;
+      });
+      var max = Math.max(1, Math.max.apply(null, buckets.map(function(b){ return b.v; })));
+      var bw = (W - pad*2) / buckets.length;
+      var bars = buckets.map(function(b, k){
+        var h = (H - pad*2) * (b.v / max);
+        var x = pad + k*bw;
+        var y = H - pad - h;
+        return '<rect class="bar" x="'+(x+bw*0.12).toFixed(1)+'" y="'+y.toFixed(1)+
+               '" width="'+(bw*0.76).toFixed(1)+'" height="'+h.toFixed(1)+'"><title>'+b.label+': '+b.v+'</title></rect>';
+      }).join("");
+      var ticks = buckets.filter(function(_, k){ return k % Math.ceil(buckets.length/6) === 0; })
+        .map(function(b){
+          var k = idx[b.key];
+          var x = pad + k*bw + bw/2;
+          return '<text class="axis" x="'+x.toFixed(1)+'" y="'+(H-4)+'" text-anchor="middle">'+b.label+'</text>';
+        }).join("");
+      svg.innerHTML = bars + ticks +
+        '<text class="axis" x="2" y="12">'+max+'</text>';
+    }
+  </script>
+</body>
+</html>
