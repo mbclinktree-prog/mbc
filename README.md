@@ -71,6 +71,20 @@ assets/             avatar.jpg, festival.png
   - Gráfico de visitas por día.
   - Tabla de clicks por botón con porcentaje.
 
+## Mantenimiento: ping automático a Supabase
+
+El plan gratuito de Supabase pausa el proyecto tras 7 días sin actividad. Para
+evitarlo, `.github/workflows/keepalive.yml` hace una consulta mínima a la base
+cada 3 días (lee la URL y la clave desde `config.js`).
+
+- Ver que corre: pestaña **Actions** del repo → "Keep Supabase active".
+- Probarlo a mano: ese mismo workflow → **Run workflow**.
+- Si una corrida falla en rojo, lo más probable es que el proyecto esté pausado:
+  restaurarlo desde el panel de Supabase (hasta 90 días después de la pausa).
+- GitHub desactiva las tareas programadas de repos públicos tras 60 días sin
+  actividad; el workflow se vuelve a habilitar solo en cada corrida. Si algún día
+  aparece desactivado, se reactiva con **Enable workflow** en la pestaña Actions.
+
 ## Notas
 
 - Si `config.js` todavía tiene los valores `TU-PROYECTO` / `TU-ANON-KEY`, la

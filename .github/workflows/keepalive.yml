@@ -1,0 +1,49 @@
+name: Keep Supabase active
+
+# El plan gratuito de Supabase pausa los proyectos tras 7 días sin actividad.
+# Esta tarea hace una consulta mínima a la base cada 3 días para que no se pause.
+# Lee la URL y la clave pública desde config.js, así que si el sitio cambia de
+# proyecto de Supabase el ping lo sigue solo.
+
+on:
+  schedule:
+    - cron: "17 9 */3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Consulta liviana a la base de datos
+        run: |
+          URL=$(grep -oE 'SUPABASE_URL: *"[^"]+"' config.js | sed -E 's/.*"([^"]+)"/\1/')
+          KEY=$(grep -oE 'SUPABASE_ANON_KEY: *"[^"]+"' config.js | sed -E 's/.*"([^"]+)"/\1/')
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "No se pudo leer SUPABASE_URL / SUPABASE_ANON_KEY de config.js"
+            exit 1
+          fi
+          echo "Consultando $URL"
+          CODE=$(curl -sS -o response.json -w "%{http_code}" \
+            "$URL/rest/v1/site_config?select=id&limit=1" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          echo "HTTP $CODE"
+          cat response.json
+          echo
+          if [ "$CODE" != "200" ]; then
+            echo "La base no respondió bien. Si el proyecto está pausado, hay que restaurarlo desde el panel de Supabase."
+            exit 1
+          fi
+
+      - name: Mantener activa esta tarea programada
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # GitHub desactiva las tareas programadas de repos públicos tras 60 días
+          # sin actividad. Volver a habilitar el workflow reinicia ese plazo.
+          gh api -X PUT "repos/${{ github.repository }}/actions/workflows/keepalive.yml/enable" || echo "No se pudo renovar (no es crítico)."
